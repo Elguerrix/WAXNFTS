@@ -1,55 +1,74 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>My WAX NFT Gallery</title>
-    <style>
-      .nft-image {
-        width: 200px;
-        height: 200px;
-        object-fit: cover;
-        margin: 10px;
+<head>
+  <meta charset="UTF-8">
+  <title>WAX NFT Gallery</title>
+  <style>
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .gallery-item {
+      margin: 10px;
+      width: 200px;
+      height: 300px;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    }
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery"></div>
+  <script src="https://cdn.jsdelivr.net/npm/waxjs/dist/waxjs.min.js"></script>
+  <script>
+    const { Api, JsonRpc } = waxjs;
+    const rpc = new JsonRpc('https://wax.greymass.com', { fetch });
+    const wax = new Api({ rpc });
+
+    async function getNFTs(account, collection) {
+      const nfts = await wax.rpc.get_table_rows({
+        code: 'atomicassets',
+        scope: collection,
+        table: 'sassets',
+        lower_bound: account,
+        upper_bound: account,
+        index_position: 2,
+        key_type: 'i64',
+        limit: 1000
+      });
+
+      return nfts.rows;
+    }
+
+    function displayNFTs(nfts) {
+      const gallery = document.querySelector('.gallery');
+      for (const nft of nfts) {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+
+        const nftImage = document.createElement('img');
+        nftImage.src = nft.data.img;
+        nftImage.alt = nft.data.name;
+
+        galleryItem.appendChild(nftImage);
+        gallery.appendChild(galleryItem);
       }
-    </style>
-  </head>
-  <body>
-    <h1>My WAX NFT Gallery</h1>
-    <div id="nft-gallery"></div>
-    <script src="https://cdn.jsdelivr.net/npm/waxjs/dist/waxjs.min.js"></script>
-    <script>
-      const { Api, JsonRpc } = waxjs;
-      const rpc = new JsonRpc('https://wax.greymass.com', { fetch });
-      const wax = new Api({ rpc });
+    }
 
-      const account = 'guerrixporto';
+    const account = 'guerrixporto';
+    const collection = 'boneheads444';
 
-      async function getNFTs() {
-        const nfts = await wax.rpc.get_table_rows({
-          code: 'atomicassets',
-          scope: account,
-          table: 'sassets',
-          limit: 1000
-        });
-
-        return nfts.rows;
-      }
-
-      async function displayNFTs() {
-        const nfts = await getNFTs();
-
-        const gallery = document.getElementById('nft-gallery');
-
-        nfts.forEach(nft => {
-          const img = document.createElement('img');
-          img.src = nft.data.img;
-          img.alt = nft.data.name;
-          img.classList.add('nft-image');
-
-          gallery.appendChild(img);
-        });
-      }
-
-      displayNFTs();
-    </script>
-  </body>
+    getNFTs(account, collection)
+      .then(displayNFTs)
+      .catch(error => console.error(error));
+  </script>
+</body>
 </html>
