@@ -1,0 +1,2 @@
+# WAXNFTS
+My WAX NFTS
